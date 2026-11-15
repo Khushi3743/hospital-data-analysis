@@ -1,0 +1,534 @@
+<meta name="dash-one-writer">
+<style>
+.hd-wrap{font-family:var(--font-anthropic-sans);color:var(--color-fg);display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
+.hd-title{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0}
+.hd-sub{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);margin:var(--cds-gap-xs) 0 0}
+.hd-take{font-size:var(--cds-font-size-body);line-height:1.55;margin:0;max-width:62rem}
+.hd-take b{font-variant-numeric:tabular-nums}
+.hd-filters{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center}
+.hd-filters label{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);display:flex;flex-direction:column;gap:2px}
+.hd-btn{font:inherit;font-size:var(--cds-font-size-caption);background:var(--color-panel);color:var(--color-fg);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:6px 12px;cursor:pointer;align-self:flex-end}
+.hd-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--cds-gap-md)}
+.hd-card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);display:flex;flex-direction:column;gap:var(--cds-gap-xs);min-width:0}
+.hd-card h3{margin:0;font-size:var(--cds-font-size-caption);font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted)}
+.hd-big{font-family:var(--font-anthropic-serif);font-weight:400;font-size:2rem;line-height:1.1;font-variant-numeric:tabular-nums;min-height:2.2rem}
+.hd-note{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin:0}
+.hd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:var(--cds-gap-md)}
+.hd-panel h2{margin:0;font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium)}
+.hd-chart{position:relative;min-height:240px;width:100%}
+.hd-chart svg text{fill:var(--cds-text-secondary);font-size:var(--cds-font-size-caption);font-family:var(--font-anthropic-sans)}
+.hd-chart .tick line{stroke:var(--cds-chart-grid)}
+.hd-chart .domain{stroke:var(--cds-chart-axis)}
+.hd-tt{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);box-shadow:var(--cds-shadow-popover);border-radius:var(--cds-radius);padding:6px 8px;font-size:var(--cds-font-size-caption);color:var(--color-fg);white-space:nowrap;opacity:0;z-index:2}
+.hd-tt span{color:var(--cds-text-secondary)}
+.hd-fail{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);padding:var(--cds-pad-md)}
+.hd-tablewrap{overflow-x:auto}
+.hd-table{border-collapse:collapse;width:100%;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+.hd-table th{text-align:right;font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted);padding:6px 8px;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+.hd-table th:first-child,.hd-table td:first-child{text-align:left}
+.hd-table td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+.hd-table td.hd-hot{color:var(--color-bad);font-weight:var(--cds-font-weight-medium)}
+.hd-legend{display:flex;gap:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);flex-wrap:wrap}
+.hd-sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.hd-wrap details{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.hd-wrap details summary{cursor:pointer;color:var(--color-fg)}
+.hd-wrap details li{margin:4px 0}
+[data-dash-source-state=refreshing]{opacity:.5}
+</style>
+
+<div class="hd-wrap">
+  <header id="header">
+    <h1 class="hd-title">Hospital Performance Dashboard</h1>
+    <p class="hd-sub">Synthetic, de-identified admissions · Jan 2023 – Dec 2024 · costs in ₹ (INR)</p>
+  </header>
+
+  <p class="hd-take" id="takeaway">Across <b data-draw="t-adm" data-source="kpi" data-field="admissions" data-row="0">—</b> admissions, patients stayed <b data-draw="t-los" data-source="kpi" data-field="avg_los" data-row="0">—</b> days on average and <b data-draw="t-readmit" data-source="kpi" data-field="readmit_rate" data-row="0">—</b>% came back within 30 days. <b data-draw="t-topdiag" data-source="readmit_diag" data-field="primary_diagnosis" data-row="0">—</b> has the highest readmission rate, at <b data-draw="t-toprate" data-source="readmit_diag" data-field="rate_pct" data-row="0">—</b>%.</p>
+
+  <div class="hd-filters" id="filters">
+    <label>Year
+      <select class="dash-select" id="f-year" aria-label="Year">
+        <option value="">Both years</option><option value="2023">2023</option><option value="2024">2024</option>
+      </select>
+    </label>
+    <label>Department
+      <select class="dash-select" id="f-dept" aria-label="Department">
+        <option value="">All departments</option>
+        <option>Cardiology</option><option>Endocrinology</option><option>General Medicine</option><option>General Surgery</option>
+        <option>Nephrology</option><option>Neurology</option><option>Obstetrics</option><option>Orthopedics</option><option>Pulmonology</option>
+      </select>
+    </label>
+    <label>Age group
+      <select class="dash-select" id="f-age" aria-label="Age group">
+        <option value="">All ages</option>
+        <option>0-17</option><option>18-34</option><option>35-49</option><option>50-64</option><option>65-79</option><option>80+</option>
+      </select>
+    </label>
+    <button class="hd-btn" id="f-reset" type="button">Reset filters</button>
+  </div>
+
+  <section class="hd-kpis" id="kpis" aria-label="Key figures">
+    <div class="hd-card" id="kpi-admissions"><h3>Admissions</h3><div class="hd-big dash-skeleton" data-draw="k-adm" data-source="kpi" data-field="admissions" data-row="0">—</div><p class="hd-note"><span data-draw="k-pat" data-source="patients">—</span> unique patients</p></div>
+    <div class="hd-card" id="kpi-los"><h3>Average length of stay</h3><div class="hd-big dash-skeleton" data-draw="k-los" data-source="kpi" data-field="avg_los" data-row="0">—</div><p class="hd-note">days · median <span data-draw="k-med" data-source="kpi" data-field="median_los" data-row="0">—</span></p></div>
+    <div class="hd-card" id="kpi-readmit"><h3>30-day readmission rate</h3><div class="hd-big dash-skeleton" data-draw="k-readmit" data-source="kpi" data-field="readmit_rate" data-row="0">—</div><p class="hd-note">% of eligible stays</p></div>
+    <div class="hd-card" id="kpi-cost"><h3>Average cost per stay</h3><div class="hd-big dash-skeleton" data-draw="k-cost" data-source="kpi" data-field="avg_cost" data-row="0">—</div><p class="hd-note">₹ per admission</p></div>
+    <div class="hd-card" id="kpi-total"><h3>Total cost</h3><div class="hd-big dash-skeleton" data-draw="k-total" data-source="kpi" data-field="total_cost_cr" data-row="0">—</div><p class="hd-note">₹ crore</p></div>
+    <div class="hd-card" id="kpi-mortality"><h3>In-hospital mortality</h3><div class="hd-big dash-skeleton" data-draw="k-mort" data-source="kpi" data-field="mortality" data-row="0">—</div><p class="hd-note">% of stays</p></div>
+  </section>
+
+  <div class="hd-grid">
+    <section class="hd-card hd-panel" id="trend">
+      <h2>Admissions per month</h2>
+      <p class="hd-note">Volume peaks in December; March–June is the quietest stretch.</p>
+      <div class="hd-chart dash-skeleton" data-draw="c-monthly" data-source="monthly"></div>
+    </section>
+    <section class="hd-card hd-panel" id="readmit-diagnosis">
+      <h2>30-day readmission rate by diagnosis</h2>
+      <div class="hd-legend"><span><i class="hd-sw" data-draw="sw-hot"></i>1.5× the hospital rate or more</span><span>Dashed line = hospital rate</span></div>
+      <div class="hd-chart dash-skeleton" data-draw="c-readmit-diag" data-source="readmit_diag readmit_overall"></div>
+    </section>
+    <section class="hd-card hd-panel" id="los-age">
+      <h2>Average length of stay by age group</h2>
+      <p class="hd-note">Days in hospital. Older patients stay longer — an association, not proof of cause.</p>
+      <div class="hd-chart dash-skeleton" data-draw="c-los-age" data-source="los_age kpi"></div>
+    </section>
+    <section class="hd-card hd-panel" id="readmit-prior">
+      <h2>Readmission rate by admissions in the prior 12 months</h2>
+      <p class="hd-note">Frequent patients are the clearest group to target with follow-up.</p>
+      <div class="hd-chart dash-skeleton" data-draw="c-readmit-prior" data-source="readmit_prior readmit_overall"></div>
+    </section>
+    <section class="hd-card hd-panel" id="cost-department">
+      <h2>Total cost by department</h2>
+      <p class="hd-note">₹ crore; hover a bar for its share of total spend.</p>
+      <div class="hd-chart dash-skeleton" data-draw="c-cost-dept" data-source="cost_dept"></div>
+    </section>
+    <section class="hd-card hd-panel" id="readmit-discharge">
+      <h2>Readmission rate by discharge type</h2>
+      <p class="hd-note">Patients who leave against medical advice return most often.</p>
+      <div class="hd-chart dash-skeleton" data-draw="c-readmit-disp" data-source="readmit_disp readmit_overall"></div>
+    </section>
+  </div>
+
+  <section class="hd-card hd-panel" id="diagnosis-table">
+    <h2>Diagnosis summary</h2>
+    <p class="hd-note">Readmission rates at 1.5× the hospital rate or more are shown in red.</p>
+    <div class="hd-tablewrap">
+      <table class="hd-table" data-source="diag_table" data-row-key="primary_diagnosis">
+        <thead><tr>
+          <th data-field="primary_diagnosis">Diagnosis</th>
+          <th data-field="stays">Stays</th>
+          <th data-field="avg_los">Avg stay (days)</th>
+          <th data-field="readmit_rate">Readmission %</th>
+          <th data-field="avg_cost">Avg cost (₹)</th>
+          <th data-field="total_cost_cr">Total (₹ Cr)</th>
+        </tr></thead>
+        <tbody data-draw="t-diag"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details id="definitions">
+    <summary>How these numbers are defined</summary>
+    <ul>
+      <li><b>Length of stay</b>: discharge date minus admission date, in days (same-day stays count as 0).</li>
+      <li><b>30-day readmission rate</b>: share of stays followed by another admission of the same patient within 30 days of discharge. Stays ending in death and discharges in the final 30 days of the data are left out, because their follow-up is incomplete.</li>
+      <li><b>Cost</b>: total billed cost of the stay; the 1.5% of stays with no recorded cost are left out of cost figures.</li>
+      <li><b>Data</b>: synthetic and fully de-identified, generated to demonstrate the analysis method. Patterns are associations, not medical evidence.</li>
+    </ul>
+  </details>
+</div>
+
+<script>
+/* ---------- shared helpers ---------- */
+window.HD = (() => {
+  const n = (v) => (v === null || v === undefined || v === '' ? NaN : +v);
+  const yes = (v) => v === 'True' || v === true;
+  const filterRows = (rows, p) => rows.filter((r) =>
+    (!p.year || String(r.admission_year) === String(p.year)) &&
+    (!p.dept || r.department === p.dept) &&
+    (!p.age || r.age_group === p.age));
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const inr = (v) => Math.round(v).toLocaleString('en-IN');
+  const int = (v) => Math.round(v).toLocaleString('en-IN');
+  const AGES = ['0-17', '18-34', '35-49', '50-64', '65-79', '80+'];
+  const reduceRate = (rows, key) => {
+    const m = new Map();
+    rows.forEach((r) => {
+      if (!yes(r.readmit_eligible)) return;
+      const k = key(r); const o = m.get(k) || {stays: 0, readmissions: 0};
+      o.stays++; if (yes(r.readmitted_30d)) o.readmissions++; m.set(k, o);
+    });
+    return m;
+  };
+  const hospitalRate = (rows) => {
+    const e = rows.filter((r) => yes(r.readmit_eligible));
+    return e.length ? r1(100 * e.filter((r) => yes(r.readmitted_30d)).length / e.length) : 0;
+  };
+
+  function status(el, ids) {
+    const ds = ids.map((id) => dash.data(id));
+    const bad = ds.find((d) => d.status !== 'ok' || d.data === null);
+    if (!bad) { el.classList.remove('dash-skeleton'); return ds; }
+    if (bad.status !== 'loading') el.classList.remove('dash-skeleton');
+    el.replaceChildren();
+    if (bad.status === 'error' || bad.status === 'missing') {
+      const f = document.createElement('div'); f.className = 'hd-fail'; f.textContent = 'Failed to load'; el.append(f);
+    }
+    return null;
+  }
+
+  function tooltip(el) {
+    const tt = document.createElement('div'); tt.className = 'hd-tt'; el.append(tt);
+    return {
+      show(ev, lines) {
+        tt.replaceChildren(...lines.map(([a, b], i) => {
+          const d = document.createElement('div');
+          if (i === 0) { d.textContent = a; d.style.fontWeight = '600'; }
+          else { const s = document.createElement('span'); s.textContent = a + ' '; d.append(s, document.createTextNode(b)); }
+          return d;
+        }));
+        const box = el.getBoundingClientRect();
+        let x = ev.clientX - box.left + 12, y = ev.clientY - box.top - 10;
+        tt.style.opacity = 1;
+        const w = tt.offsetWidth;
+        if (x + w > box.width) x = Math.max(0, ev.clientX - box.left - w - 12);
+        tt.style.left = x + 'px'; tt.style.top = Math.max(0, y) + 'px';
+      },
+      hide() { tt.style.opacity = 0; },
+    };
+  }
+
+  function measure(svg, texts) {
+    const t = svg.append('text').attr('x', -9999);
+    let w = 0; texts.forEach((s) => { t.text(s); w = Math.max(w, t.node().getComputedTextLength()); });
+    t.remove(); return Math.ceil(w);
+  }
+
+  /* horizontal bars */
+  function hbar(el, rows, o) {
+    el.replaceChildren();
+    const W = Math.max(280, el.clientWidth || 500), rowH = 24;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('role', 'img').attr('aria-label', o.aria);
+    const lw = measure(svg, rows.map((d) => d[o.label])) + 8;
+    const vw = measure(svg, rows.map((d) => o.fmt(d[o.value]))) + 8;
+    const H = rows.length * rowH + 24;
+    svg.attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const max = d3.max(rows, (d) => d[o.value]) || 1;
+    const x = d3.scaleLinear().domain([0, Math.max(max, o.ref || 0)]).range([lw, W - vw]);
+    const y = d3.scaleBand().domain(rows.map((d) => d[o.label])).range([4, H - 20]).padding(0.22);
+    const tip = tooltip(el);
+    svg.append('g').selectAll('text').data(rows).join('text')
+      .attr('x', lw - 8).attr('y', (d) => y(d[o.label]) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text((d) => d[o.label]);
+    svg.append('g').selectAll('rect').data(rows).join('rect')
+      .attr('x', lw).attr('y', (d) => y(d[o.label])).attr('height', y.bandwidth())
+      .attr('width', (d) => Math.max(1, x(d[o.value]) - lw)).attr('rx', 2)
+      .style('fill', (d) => (o.hot && o.hot(d) ? 'var(--cds-chart-status-critical)' : dash.colors[0]))
+      .on('mousemove', (ev, d) => tip.show(ev, o.tip(d))).on('mouseleave', tip.hide);
+    svg.append('g').selectAll('text').data(rows).join('text')
+      .attr('x', (d) => x(d[o.value]) + 4).attr('y', (d) => y(d[o.label]) + y.bandwidth() / 2).attr('dy', '0.35em').text((d) => o.fmt(d[o.value]));
+    if (o.ref) {
+      svg.append('line').attr('x1', x(o.ref)).attr('x2', x(o.ref)).attr('y1', 0).attr('y2', H - 18)
+        .style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+      svg.append('text').attr('x', x(o.ref)).attr('y', H - 4).attr('text-anchor', 'middle').text(o.refLabel);
+    }
+  }
+
+  /* vertical columns */
+  function vbar(el, rows, o) {
+    el.replaceChildren();
+    const W = Math.max(260, el.clientWidth || 500), H = 240, m = {t: 22, r: 8, b: 26, l: 8};
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('role', 'img').attr('aria-label', o.aria);
+    const x = d3.scaleBand().domain(rows.map((d) => d[o.label])).range([m.l, W - m.r]).padding(0.28);
+    const y = d3.scaleLinear().domain([0, Math.max(d3.max(rows, (d) => d[o.value]) || 1, o.ref || 0) * 1.08]).range([H - m.b, m.t]);
+    const tip = tooltip(el);
+    svg.append('g').selectAll('rect').data(rows).join('rect')
+      .attr('x', (d) => x(d[o.label])).attr('width', x.bandwidth()).attr('rx', 2)
+      .attr('y', (d) => y(d[o.value])).attr('height', (d) => y(0) - y(d[o.value]))
+      .style('fill', (d) => (o.hot && o.hot(d) ? 'var(--cds-chart-status-critical)' : dash.colors[0]))
+      .on('mousemove', (ev, d) => tip.show(ev, o.tip(d))).on('mouseleave', tip.hide);
+    svg.append('g').selectAll('text').data(rows).join('text')
+      .attr('x', (d) => x(d[o.label]) + x.bandwidth() / 2).attr('y', (d) => y(d[o.value]) - 5).attr('text-anchor', 'middle').text((d) => o.fmt(d[o.value]));
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(8)).call((g) => g.select('.domain').remove());
+    if (o.ref) {
+      svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(o.ref)).attr('y2', y(o.ref))
+        .style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+      svg.append('text').attr('x', W - m.r).attr('y', y(o.ref) - 4).attr('text-anchor', 'end').text(o.refLabel);
+    }
+  }
+
+  /* line over months */
+  function line(el, rows, o) {
+    el.replaceChildren();
+    const W = Math.max(260, el.clientWidth || 500), H = 240;
+    const parse = d3.utcParse('%Y-%m'), fmtM = d3.utcFormat('%b %Y'), fmtS = d3.utcFormat(W < 420 ? '%b %y' : '%b %Y');
+    const data = rows.map((d) => ({...d, date: parse(d.month)}));
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('role', 'img').attr('aria-label', o.aria);
+    const y = d3.scaleLinear().domain([0, (d3.max(data, (d) => d.admissions) || 1) * 1.1]).nice().range([H - 26, 10]);
+    const ml = measure(svg, y.ticks(5).map((t) => int(t))) + 10;
+    const x = d3.scaleUtc().domain(d3.extent(data, (d) => d.date)).range([ml, W - 12]);
+    svg.append('g').attr('transform', `translate(${ml},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - ml - 12)).tickFormat(int))
+      .call((g) => g.select('.domain').remove());
+    svg.append('g').attr('transform', `translate(0,${H - 26})`)
+      .call(d3.axisBottom(x).ticks(Math.max(2, Math.floor((W - ml) / 90))).tickFormat(fmtS).tickSizeOuter(0));
+    svg.append('path').datum(data).attr('fill', 'none').style('stroke', dash.colors[0]).attr('stroke-width', 2)
+      .attr('d', d3.line().x((d) => x(d.date)).y((d) => y(d.admissions)));
+    const tip = tooltip(el);
+    svg.append('g').selectAll('circle').data(data).join('circle').attr('cx', (d) => x(d.date)).attr('cy', (d) => y(d.admissions)).attr('r', 3)
+      .style('fill', dash.colors[0]);
+    svg.append('g').selectAll('rect').data(data).join('rect')
+      .attr('x', (d, i) => x(d.date) - (W - ml) / data.length / 2).attr('width', (W - ml) / data.length).attr('y', 0).attr('height', H - 26)
+      .attr('fill', 'transparent')
+      .on('mousemove', (ev, d) => tip.show(ev, [[fmtM(d.date)], ['Admissions', int(d.admissions)], ['Avg stay', d.avg_los + ' days']]))
+      .on('mouseleave', tip.hide);
+  }
+
+  return {n, yes, filterRows, r1, inr, int, AGES, reduceRate, hospitalRate, status, hbar, vbar, line};
+})();
+</script>
+
+<script>
+/* ---------- calculations (each one respects the filters) ---------- */
+const {n, yes, filterRows, r1, AGES, reduceRate, hospitalRate} = window.HD;
+
+dash.calc('kpi', {
+  title: 'Headline figures',
+  description: 'Admissions, average stay, readmission rate, cost and mortality for the selected filters.',
+  inputs: ['admissions'],
+  fn: (admissions) => {
+    const rows = filterRows(admissions, dash.params());
+    const los = rows.map((r) => n(r.length_of_stay)).sort((a, b) => a - b);
+    const costs = rows.map((r) => n(r.total_cost)).filter((v) => !isNaN(v));
+    const sum = costs.reduce((a, b) => a + b, 0);
+    return [{
+      admissions: rows.length,
+      avg_los: rows.length ? r1(d3.mean(los)) : 0,
+      median_los: rows.length ? d3.median(los) : 0,
+      readmit_rate: hospitalRate(rows),
+      avg_cost: costs.length ? Math.round(sum / costs.length) : 0,
+      total_cost_cr: r1(sum / 1e7),
+      mortality: rows.length ? Math.round(1000 * rows.filter((r) => r.discharge_disposition === 'Expired').length / rows.length) / 10 : 0,
+    }];
+  },
+});
+
+dash.calc('patients', {
+  title: 'Unique patients',
+  description: 'Distinct patients among the selected admissions.',
+  inputs: ['admissions'],
+  fn: (admissions) => new Set(filterRows(admissions, dash.params()).map((r) => r.patient_id)).size,
+});
+
+dash.calc('monthly', {
+  title: 'Admissions per month',
+  description: 'Count of admissions and average stay by admission month.',
+  inputs: ['admissions'],
+  fn: (admissions) => {
+    const rows = filterRows(admissions, dash.params());
+    return d3.rollups(rows, (v) => ({admissions: v.length, avg_los: r1(d3.mean(v, (r) => n(r.length_of_stay)))}), (r) => r.admission_month)
+      .sort((a, b) => d3.ascending(a[0], b[0])).map(([month, o]) => ({month, ...o}));
+  },
+});
+
+dash.calc('readmit_diag', {
+  title: 'Readmission rate by diagnosis',
+  description: 'Share of eligible stays followed by another admission within 30 days, by diagnosis (groups under 20 stays hidden).',
+  inputs: ['admissions'],
+  fn: (admissions) => {
+    const rows = filterRows(admissions, dash.params());
+    return [...reduceRate(rows, (r) => r.primary_diagnosis)]
+      .map(([primary_diagnosis, o]) => ({primary_diagnosis, ...o, rate_pct: r1(100 * o.readmissions / o.stays)}))
+      .filter((d) => d.stays >= 20).sort((a, b) => b.rate_pct - a.rate_pct);
+  },
+});
+
+dash.calc('readmit_overall', {
+  title: 'Hospital readmission rate',
+  description: 'Readmission rate across all eligible stays for the selected filters (reference line).',
+  inputs: ['admissions'],
+  fn: (admissions) => hospitalRate(filterRows(admissions, dash.params())),
+});
+
+dash.calc('los_age', {
+  title: 'Average stay by age group',
+  description: 'Mean length of stay in days for each age group.',
+  inputs: ['admissions'],
+  fn: (admissions) => {
+    const rows = filterRows(admissions, dash.params());
+    const m = d3.rollup(rows, (v) => ({stays: v.length, avg_los: r1(d3.mean(v, (r) => n(r.length_of_stay)))}), (r) => r.age_group);
+    return AGES.filter((a) => m.has(a)).map((age_group) => ({age_group, ...m.get(age_group)}));
+  },
+});
+
+dash.calc('readmit_prior', {
+  title: 'Readmission rate by prior admissions',
+  description: 'Readmission rate grouped by the patient’s number of admissions in the previous 12 months.',
+  inputs: ['admissions'],
+  fn: (admissions) => {
+    const rows = filterRows(admissions, dash.params());
+    const m = reduceRate(rows, (r) => (n(r.prior_admissions_12m) >= 3 ? '3+' : String(n(r.prior_admissions_12m))));
+    return ['0', '1', '2', '3+'].filter((k) => m.has(k))
+      .map((k) => ({prior_admissions: k, ...m.get(k), rate_pct: r1(100 * m.get(k).readmissions / m.get(k).stays)}));
+  },
+});
+
+dash.calc('readmit_disp', {
+  title: 'Readmission rate by discharge type',
+  description: 'Readmission rate by where the patient went at discharge (Unknown left out).',
+  inputs: ['admissions'],
+  fn: (admissions) => {
+    const rows = filterRows(admissions, dash.params());
+    return [...reduceRate(rows, (r) => r.discharge_disposition)].filter(([k]) => k !== 'Unknown')
+      .map(([discharge_disposition, o]) => ({discharge_disposition, ...o, rate_pct: r1(100 * o.readmissions / o.stays)}))
+      .sort((a, b) => b.rate_pct - a.rate_pct);
+  },
+});
+
+dash.calc('cost_dept', {
+  title: 'Total cost by department',
+  description: 'Sum of stay costs per department in ₹ crore, with share of total.',
+  inputs: ['admissions'],
+  fn: (admissions) => {
+    const rows = filterRows(admissions, dash.params());
+    const total = d3.sum(rows, (r) => n(r.total_cost) || 0);
+    return d3.rollups(rows, (v) => {
+      const s = d3.sum(v, (r) => n(r.total_cost) || 0);
+      const c = v.map((r) => n(r.total_cost)).filter((x) => !isNaN(x));
+      return {stays: v.length, total_cost_cr: r1(s / 1e7), share_pct: total ? r1(100 * s / total) : 0, avg_cost: c.length ? Math.round(d3.mean(c)) : 0};
+    }, (r) => r.department).map(([department, o]) => ({department, ...o})).sort((a, b) => b.total_cost_cr - a.total_cost_cr);
+  },
+});
+
+dash.calc('diag_table', {
+  title: 'Diagnosis summary',
+  description: 'Stays, average stay, readmission rate and cost for each diagnosis.',
+  inputs: ['admissions'],
+  fn: (admissions) => {
+    const rows = filterRows(admissions, dash.params());
+    const rates = reduceRate(rows, (r) => r.primary_diagnosis);
+    return d3.rollups(rows, (v) => {
+      const c = v.map((r) => n(r.total_cost)).filter((x) => !isNaN(x));
+      return {stays: v.length, avg_los: r1(d3.mean(v, (r) => n(r.length_of_stay))), avg_cost: c.length ? Math.round(d3.mean(c)) : 0, total_cost_cr: r1(d3.sum(c) / 1e7)};
+    }, (r) => r.primary_diagnosis).map(([primary_diagnosis, o]) => {
+      const rr = rates.get(primary_diagnosis);
+      return {primary_diagnosis, ...o, readmit_rate: rr ? r1(100 * rr.readmissions / rr.stays) : 0};
+    }).sort((a, b) => b.total_cost_cr - a.total_cost_cr);
+  },
+});
+</script>
+
+<script>
+/* ---------- filters (listen + set values only) ---------- */
+(() => {
+  const map = {'f-year': 'year', 'f-dept': 'dept', 'f-age': 'age'};
+  const sync = () => {
+    const p = dash.params();
+    document.querySelectorAll('#f-year, #f-dept, #f-age').forEach((el) => {
+      if (document.activeElement !== el) el.value = p[map[el.id]] ?? '';
+    });
+  };
+  document.querySelectorAll('#f-year, #f-dept, #f-age').forEach((el) => {
+    el.addEventListener('change', () => dash.setParams({[map[el.id]]: el.value || ''}));
+  });
+  document.querySelectorAll('#f-reset').forEach((b) => b.addEventListener('click', () => { dash.resetParams(); }));
+  dash.onData(sync);
+})();
+</script>
+
+<script>
+/* ---------- drawings ---------- */
+const H = window.HD;
+const one = (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) && d.data.length ? d.data[0] : null; };
+const txt = (name, id, field, fmt) => dash.draw(name, (el) => {
+  const d = dash.data(id);
+  if (d.status !== 'loading') el.classList.remove('dash-skeleton');
+  const row = one(id);
+  el.textContent = row && row[field] !== null && row[field] !== undefined ? fmt(row[field]) : '—';
+});
+
+txt('t-adm', 'kpi', 'admissions', H.int);
+txt('t-los', 'kpi', 'avg_los', (v) => v.toFixed(1));
+txt('t-readmit', 'kpi', 'readmit_rate', (v) => v.toFixed(1));
+txt('t-topdiag', 'readmit_diag', 'primary_diagnosis', (v) => v);
+txt('t-toprate', 'readmit_diag', 'rate_pct', (v) => v.toFixed(1));
+txt('k-adm', 'kpi', 'admissions', H.int);
+txt('k-los', 'kpi', 'avg_los', (v) => v.toFixed(1));
+txt('k-med', 'kpi', 'median_los', (v) => String(v));
+txt('k-readmit', 'kpi', 'readmit_rate', (v) => v.toFixed(1) + '%');
+txt('k-cost', 'kpi', 'avg_cost', (v) => '₹' + H.inr(v));
+txt('k-total', 'kpi', 'total_cost_cr', (v) => '₹' + v.toFixed(1) + ' Cr');
+txt('k-mort', 'kpi', 'mortality', (v) => v.toFixed(1) + '%');
+
+dash.draw('k-pat', (el) => {
+  const d = dash.data('patients');
+  el.textContent = d.status === 'ok' && d.data !== null ? H.int(d.data) : '—';
+});
+
+dash.draw('sw-hot', (el) => { el.style.background = 'var(--cds-chart-status-critical)'; });
+
+dash.draw('c-monthly', (el) => {
+  const ds = H.status(el, ['monthly']); if (!ds) return;
+  H.line(el, ds[0].data, {aria: 'Line chart of admissions per month'});
+});
+
+dash.draw('c-readmit-diag', (el) => {
+  const ds = H.status(el, ['readmit_diag', 'readmit_overall']); if (!ds) return;
+  const ref = ds[1].data;
+  H.hbar(el, ds[0].data, {
+    label: 'primary_diagnosis', value: 'rate_pct', fmt: (v) => v.toFixed(1) + '%', ref, refLabel: `Hospital ${ref.toFixed(1)}%`,
+    hot: (d) => d.rate_pct >= 1.5 * ref, aria: 'Bar chart of 30-day readmission rate by diagnosis',
+    tip: (d) => [[d.primary_diagnosis], ['Readmission rate', d.rate_pct.toFixed(1) + '%'], ['Readmissions', H.int(d.readmissions) + ' of ' + H.int(d.stays)]],
+  });
+});
+
+dash.draw('c-los-age', (el) => {
+  const ds = H.status(el, ['los_age', 'kpi']); if (!ds) return;
+  const ref = ds[1].data && ds[1].data[0] ? ds[1].data[0].avg_los : 0;
+  H.vbar(el, ds[0].data, {
+    label: 'age_group', value: 'avg_los', fmt: (v) => v.toFixed(1), ref, refLabel: `Avg ${ref.toFixed(1)} days`,
+    aria: 'Column chart of average length of stay by age group',
+    tip: (d) => [['Age ' + d.age_group], ['Avg stay', d.avg_los.toFixed(1) + ' days'], ['Stays', H.int(d.stays)]],
+  });
+});
+
+dash.draw('c-readmit-prior', (el) => {
+  const ds = H.status(el, ['readmit_prior', 'readmit_overall']); if (!ds) return;
+  const ref = ds[1].data;
+  H.vbar(el, ds[0].data.map((d) => ({...d, label: d.prior_admissions + (d.prior_admissions === '1' ? ' prior stay' : ' prior stays')})), {
+    label: 'label', value: 'rate_pct', fmt: (v) => v.toFixed(1) + '%', ref, refLabel: `Hospital ${ref.toFixed(1)}%`,
+    hot: (d) => d.rate_pct >= 1.5 * ref, aria: 'Column chart of readmission rate by number of admissions in the prior year',
+    tip: (d) => [[d.label], ['Readmission rate', d.rate_pct.toFixed(1) + '%'], ['Eligible stays', H.int(d.stays)]],
+  });
+});
+
+dash.draw('c-cost-dept', (el) => {
+  const ds = H.status(el, ['cost_dept']); if (!ds) return;
+  H.hbar(el, ds[0].data, {
+    label: 'department', value: 'total_cost_cr', fmt: (v) => '₹' + v.toFixed(1) + ' Cr', aria: 'Bar chart of total cost by department',
+    tip: (d) => [[d.department], ['Total', '₹' + d.total_cost_cr.toFixed(1) + ' Cr'], ['Share of spend', d.share_pct.toFixed(1) + '%'], ['Avg per stay', '₹' + H.inr(d.avg_cost)], ['Stays', H.int(d.stays)]],
+  });
+});
+
+dash.draw('c-readmit-disp', (el) => {
+  const ds = H.status(el, ['readmit_disp', 'readmit_overall']); if (!ds) return;
+  const ref = ds[1].data;
+  H.hbar(el, ds[0].data, {
+    label: 'discharge_disposition', value: 'rate_pct', fmt: (v) => v.toFixed(1) + '%', ref, refLabel: `Hospital ${ref.toFixed(1)}%`,
+    hot: (d) => d.rate_pct >= 1.5 * ref, aria: 'Bar chart of readmission rate by discharge type',
+    tip: (d) => [[d.discharge_disposition], ['Readmission rate', d.rate_pct.toFixed(1) + '%'], ['Eligible stays', H.int(d.stays)]],
+  });
+});
+
+dash.draw('t-diag', (tb) => {
+  const d = dash.data('diag_table'), o = dash.data('readmit_overall');
+  tb.replaceChildren();
+  if (d.status !== 'ok' || !d.data) return;
+  const ref = o.status === 'ok' && o.data !== null ? o.data : Infinity;
+  d.data.forEach((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = r.primary_diagnosis;
+    [[r.primary_diagnosis], [H.int(r.stays)], [r.avg_los.toFixed(1)], [r.readmit_rate.toFixed(1), r.readmit_rate >= 1.5 * ref], [H.inr(r.avg_cost)], [r.total_cost_cr.toFixed(1)]]
+      .forEach(([v, hot]) => { const td = document.createElement('td'); td.textContent = v; if (hot) td.className = 'hd-hot'; tr.append(td); });
+    tb.append(tr);
+  });
+});
+</script>

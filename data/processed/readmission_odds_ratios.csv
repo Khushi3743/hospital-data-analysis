@@ -1,0 +1,14 @@
+,odds_ratio,ci_low,ci_high,p_value
+C(admission_type)[T.Emergency],1.553,1.288,1.872,0.0
+C(admission_type)[T.Urgent],1.488,1.213,1.825,0.0
+"C(discharge_disposition, Treatment('Home'))[T.Home with Care]",0.999,0.818,1.221,0.995
+"C(discharge_disposition, Treatment('Home'))[T.Left Against Advice]",2.887,2.261,3.685,0.0
+"C(discharge_disposition, Treatment('Home'))[T.Skilled Nursing/Rehab]",1.43,1.203,1.699,0.0
+C(insurance_type)[T.Government Scheme],0.968,0.786,1.193,0.76
+C(insurance_type)[T.Private],0.957,0.775,1.182,0.681
+C(insurance_type)[T.Self-Pay],0.87,0.683,1.109,0.261
+C(insurance_type)[T.Unknown],0.836,0.55,1.272,0.404
+age,1.011,1.008,1.015,0.0
+comorbidity_count,1.171,1.119,1.225,0.0
+prior_admissions_12m,1.355,1.274,1.443,0.0
+length_of_stay,1.028,1.015,1.041,0.0

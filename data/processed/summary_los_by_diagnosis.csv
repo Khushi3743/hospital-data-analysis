@@ -1,0 +1,17 @@
+primary_diagnosis,stays,avg_los,median_los,pct_icu
+Stroke,587,11.9,10.0,29.3
+Sepsis,694,10.9,9.0,44.7
+Heart Failure,862,10.1,9.0,13.6
+Acute Myocardial Infarction,618,8.4,7.0,42.7
+Kidney Disease,843,8.4,7.0,3.6
+COPD Exacerbation,810,7.4,6.0,2.7
+Pneumonia,556,6.8,6.0,4.0
+Diabetes Complications,763,5.1,4.0,2.5
+Fracture,534,5.0,4.0,3.9
+Hip/Knee Replacement,614,4.9,4.0,4.1
+C-Section,389,4.0,4.0,2.1
+Arrhythmia,512,3.6,3.0,3.1
+Appendicitis,722,3.3,3.0,2.8
+Asthma,774,2.7,2.0,3.1
+Gallbladder Disease,523,2.7,2.0,2.1
+Normal Delivery,408,2.2,2.0,2.9
