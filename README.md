@@ -1,16 +1,11 @@
 # Hospital Data Analysis & Dashboard
 
-**Project ET 4** · Khushi Balyan ([@Khushi3743](https://github.com/Khushi3743))
+Khushi Balyan 
 
 End-to-end healthcare analytics project: raw, messy hospital admission records → cleaned dataset → analysis in Python and SQL → interactive dashboard → recommendations for hospital managers.
 
 > **Data:** synthetic and fully de-identified (10,209 admissions, 7,200 patients, Jan 2023 – Dec 2024, costs in ₹). No real patient data is used. Findings are patterns in data, not medical advice.
 
-**Live dashboard:** https://claude.ai/artifact/KjeCQrC5LWXTV7aeaV7vnt
-**Final report:** https://claude.ai/artifact/XVc86HZk4Y9smCT65bgZqp
-**Presentation:** https://claude.ai/artifact/UFHaBqhQ7PWDD3jdfhwnLj
-
-*(These links are private until you share them — use Share on each page to make them viewable before adding them to a resume.)*
 
 ---
 
