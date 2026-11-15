@@ -1,12 +1,8 @@
 # Hospital Readmission Analysis — 101,766 Real Encounters from 130 US Hospitals
 
-**Project ET 4** · Khushi Balyan ([@Khushi3743](https://github.com/Khushi3743))
+Khushi Balyan
 
 End-to-end healthcare analytics project on a **real, public, de-identified hospital dataset**: raw records → cleaning → analysis in Python and SQL → readmission risk model → interactive dashboard → recommendations for hospital managers.
-
-**Live dashboard:** https://claude.ai/artifact/KjeCQrC5LWXTV7aeaV7vnt
-**Final report:** https://claude.ai/artifact/XVc86HZk4Y9smCT65bgZqp
-**Presentation:** https://claude.ai/artifact/UFHaBqhQ7PWDD3jdfhwnLj
 
 ## Data
 
