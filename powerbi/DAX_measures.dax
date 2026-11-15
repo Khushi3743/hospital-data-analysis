@@ -1,92 +1,63 @@
 // =====================================================================
-// Power BI measures — Hospital Analytics
-// Table name in Power BI: Admissions   (from hospital_admissions_clean.csv)
-// In Power Query set types: readmitted_30d, readmit_eligible, high_cost,
-// age_imputed, cost_corrected -> True/False; dates -> Date; costs -> Decimal.
-// Create a display folder per section (Model view > Properties > Display folder).
+// Power BI measures — Hospital Readmission Analytics (real UCI data)
+// Table name in Power BI: Encounters  (from hospital_encounters_clean.csv)
+// In Power Query set: a1c_tested, med_changed, expired, readmit_eligible,
+// readmitted_30d -> True/False; counts and length_of_stay -> Whole number.
 // =====================================================================
 
-// ---------- Date table (Modeling > New table) ----------
-Calendar =
-ADDCOLUMNS (
-    CALENDAR ( DATE ( 2023, 1, 1 ), DATE ( 2024, 12, 31 ) ),
-    "Year", YEAR ( [Date] ),
-    "Month No", MONTH ( [Date] ),
-    "Month", FORMAT ( [Date], "MMM" ),
-    "Year-Month", FORMAT ( [Date], "YYYY-MM" ),
-    "Weekday", FORMAT ( [Date], "dddd" ),
-    "Weekday No", WEEKDAY ( [Date], 2 )
-)
-// Relationship: Calendar[Date] 1 -> * Admissions[admission_date]
-// Sort Calendar[Month] by [Month No] and [Weekday] by [Weekday No].
+// ---------- Sort helper tables (Modeling > New table) ----------
+AgeOrder =
+DATATABLE ( "age_group", STRING, "age_sort", INTEGER,
+    { { "Under 40", 1 }, { "40-49", 2 }, { "50-59", 3 }, { "60-69", 4 }, { "70-79", 5 }, { "80+", 6 } } )
+// Relationship: AgeOrder[age_group] 1 -> * Encounters[age_group]; sort age_group by age_sort.
 
 // ---------- Volume ----------
-Admissions = COUNTROWS ( Admissions )
+Encounters = COUNTROWS ( Encounters )
 
-Unique Patients = DISTINCTCOUNT ( Admissions[patient_id] )
+Unique Patients = DISTINCTCOUNT ( Encounters[patient_nbr] )
 
 Emergency Share % =
-DIVIDE (
-    CALCULATE ( [Admissions], Admissions[admission_type] = "Emergency" ),
-    [Admissions]
-)
+DIVIDE ( CALCULATE ( [Encounters], Encounters[admission_type] = "Emergency" ), [Encounters] )
 
-Admissions PY =
-CALCULATE ( [Admissions], SAMEPERIODLASTYEAR ( Calendar[Date] ) )
-
-Admissions YoY % = DIVIDE ( [Admissions] - [Admissions PY], [Admissions PY] )
+Repeat Encounters = [Encounters] - [Unique Patients]
 
 // ---------- Length of stay ----------
-Avg LOS = AVERAGE ( Admissions[length_of_stay] )
+Avg LOS = AVERAGE ( Encounters[length_of_stay] )
 
-Median LOS = MEDIAN ( Admissions[length_of_stay] )
+Median LOS = MEDIAN ( Encounters[length_of_stay] )
 
-Total Bed Days = SUM ( Admissions[length_of_stay] )
+Bed Days = SUM ( Encounters[length_of_stay] )
 
-Avg LOS vs Hospital =
-[Avg LOS] - CALCULATE ( [Avg LOS], REMOVEFILTERS ( Admissions[primary_diagnosis], Admissions[age_group], Admissions[department] ) )
+Bed Day Share % = DIVIDE ( [Bed Days], CALCULATE ( [Bed Days], ALL ( Encounters ) ) )
+
+Avg LOS vs Network =
+[Avg LOS] - CALCULATE ( [Avg LOS], REMOVEFILTERS ( Encounters[diag_group], Encounters[age_group] ) )
 
 // ---------- Readmissions ----------
-Eligible Stays =
-CALCULATE ( [Admissions], Admissions[readmit_eligible] = TRUE () )
+Eligible Encounters = CALCULATE ( [Encounters], Encounters[readmit_eligible] = TRUE () )
 
-Readmissions =
-CALCULATE ( [Admissions], Admissions[readmitted_30d] = TRUE () )
+Readmissions 30d = CALCULATE ( [Encounters], Encounters[readmitted_30d] = TRUE () )
 
-Readmission Rate % = DIVIDE ( [Readmissions], [Eligible Stays] )
+Readmission Rate % = DIVIDE ( [Readmissions 30d], [Eligible Encounters] )
 
-Readmission Rate vs Hospital =
+Readmission Rate vs Network =
 [Readmission Rate %]
-    - CALCULATE ( [Readmission Rate %], REMOVEFILTERS ( Admissions[primary_diagnosis], Admissions[age_group], Admissions[department] ) )
+    - CALCULATE ( [Readmission Rate %], REMOVEFILTERS ( Encounters[diag_group], Encounters[age_group], Encounters[discharge_group], Encounters[prior_inpatient_band] ) )
 
-// Conditional-format helper: red if group is 1.5x the hospital rate
 Readmission Flag Colour =
-VAR hosp = CALCULATE ( [Readmission Rate %], ALL ( Admissions ) )
-RETURN IF ( [Readmission Rate %] >= hosp * 1.5, "#C8553D", "#2A6F97" )
+VAR net = CALCULATE ( [Readmission Rate %], ALL ( Encounters ) )
+RETURN IF ( [Readmission Rate %] >= net * 1.4, "#C8553D", "#2A6F97" )
 
-// ---------- Cost ----------
-Total Cost = SUM ( Admissions[total_cost] )
+// ---------- Clinical process ----------
+HbA1c Tested % = DIVIDE ( CALCULATE ( [Encounters], Encounters[a1c_tested] = TRUE () ), [Encounters] )
 
-Total Cost (Cr) = DIVIDE ( [Total Cost], 10000000 )
+Avg Medications = AVERAGE ( Encounters[num_medications] )
 
-Avg Cost per Stay = AVERAGE ( Admissions[total_cost] )
+Avg Lab Tests = AVERAGE ( Encounters[num_lab_procedures] )
 
-Avg Cost per Day = DIVIDE ( [Total Cost], SUMX ( Admissions, MAX ( Admissions[length_of_stay], 1 ) ) )
-
-Cost Share % = DIVIDE ( [Total Cost], CALCULATE ( [Total Cost], ALL ( Admissions ) ) )
-
-High-Cost Stays = CALCULATE ( [Admissions], Admissions[high_cost] = TRUE () )
-
-High-Cost Share of Spend % =
-DIVIDE ( CALCULATE ( [Total Cost], Admissions[high_cost] = TRUE () ), [Total Cost] )
-
-// ---------- Outcomes ----------
-Mortality % =
-DIVIDE ( CALCULATE ( [Admissions], Admissions[discharge_disposition] = "Expired" ), [Admissions] )
-
-ICU Stay % = DIVIDE ( CALCULATE ( [Admissions], Admissions[icu_days] > 0 ), [Admissions] )
+Mortality % = DIVIDE ( CALCULATE ( [Encounters], Encounters[expired] = TRUE () ), [Encounters] )
 
 // ---------- Dynamic title ----------
 Selection Title =
-"Showing " & FORMAT ( [Admissions], "#,0" ) & " admissions"
-    & IF ( ISFILTERED ( Admissions[department] ), " · " & CONCATENATEX ( VALUES ( Admissions[department] ), Admissions[department], ", " ), "" )
+"Showing " & FORMAT ( [Encounters], "#,0" ) & " encounters"
+    & IF ( ISFILTERED ( Encounters[age_group] ), " · ages " & CONCATENATEX ( VALUES ( Encounters[age_group] ), Encounters[age_group], ", " ), "" )

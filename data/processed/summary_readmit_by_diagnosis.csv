@@ -1,17 +1,10 @@
-primary_diagnosis,stays,readmissions,rate_pct
-Heart Failure,772,207,26.8
-COPD Exacerbation,760,199,26.2
-Kidney Disease,776,187,24.1
-Acute Myocardial Infarction,572,113,19.8
-Sepsis,584,102,17.5
-Stroke,515,86,16.7
-Diabetes Complications,718,108,15.0
-Pneumonia,525,69,13.1
-Arrhythmia,476,36,7.6
-Hip/Knee Replacement,576,32,5.6
-Asthma,726,41,5.6
-Appendicitis,669,28,4.2
-C-Section,361,15,4.2
-Fracture,498,19,3.8
-Gallbladder Disease,495,19,3.8
-Normal Delivery,389,3,0.8
+diag_group,encounters,readmissions,rate_pct
+Diabetes,8661,1135,13.1
+Injury,6851,850,12.4
+Circulatory,29680,3469,11.7
+Other,17813,2084,11.7
+Genitourinary,5002,552,11.0
+Neoplasms,3131,341,10.9
+Digestive,9333,1010,10.8
+Respiratory,13934,1402,10.1
+Musculoskeletal,4935,471,9.5

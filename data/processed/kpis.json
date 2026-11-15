@@ -1,11 +1,15 @@
 {
-  "admissions": 10209,
-  "unique_patients": 7200,
-  "avg_los_days": 6.37,
-  "median_los_days": 5.0,
-  "readmission_rate_30d_pct": 13.4,
-  "avg_cost_per_stay_inr": 108971,
-  "total_cost_inr_crore": 109.58,
-  "mortality_pct": 1.67,
-  "emergency_share_pct": 53.6
+  "encounters": 101763,
+  "unique_patients": 71515,
+  "avg_los_days": 4.4,
+  "median_los_days": 4.0,
+  "readmit_eligible": 99340,
+  "readmissions_30d": 11314,
+  "readmission_rate_30d_pct": 11.39,
+  "mortality_pct": 1.62,
+  "emergency_share_pct": 53.1,
+  "a1c_tested_pct": 16.7,
+  "total_bed_days": 447352,
+  "avg_medications": 16.0,
+  "avg_lab_procedures": 43.1
 }

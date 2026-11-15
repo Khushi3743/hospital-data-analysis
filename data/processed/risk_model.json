@@ -1,5 +1,17 @@
 {
-  "auc": 0.751,
-  "top_decile_rate_pct": 41.8,
-  "top_decile_share_of_readmissions_pct": 31.1
+  "logistic_regression": {
+    "auc": 0.659,
+    "top_decile_rate_pct": 24.3,
+    "top_decile_share_pct": 21.2,
+    "lift": 2.12
+  },
+  "gradient_boosting": {
+    "auc": 0.663,
+    "top_decile_rate_pct": 26.0,
+    "top_decile_share_pct": 22.7,
+    "lift": 2.27
+  },
+  "test_base_rate_pct": 11.4,
+  "train_encounters": 69613,
+  "test_encounters": 29727
 }

@@ -1,0 +1,10 @@
+diag_group,encounters,bed_days,avg_meds,avg_labs,bed_day_share_pct
+Circulatory,30436,128666,17.1,43.8,28.8
+Other,18193,86656,14.1,42.3,19.4
+Respiratory,14423,60993,16.3,44.3,13.6
+Digestive,9475,41312,14.7,44.9,9.2
+Diabetes,8757,38024,14.1,45.5,8.5
+Injury,6972,32186,17.3,40.7,7.2
+Genitourinary,5117,21696,14.9,46.4,4.8
+Musculoskeletal,4957,19431,19.8,32.8,4.3
+Neoplasms,3433,18388,17.5,40.1,4.1

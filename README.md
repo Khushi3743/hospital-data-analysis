@@ -1,65 +1,69 @@
-# Hospital Data Analysis & Dashboard
+# Hospital Readmission Analysis — 101,766 Real Encounters from 130 US Hospitals
 
-Khushi Balyan 
+**Project ET 4** · Khushi Balyan ([@Khushi3743](https://github.com/Khushi3743))
 
-End-to-end healthcare analytics project: raw, messy hospital admission records → cleaned dataset → analysis in Python and SQL → interactive dashboard → recommendations for hospital managers.
+End-to-end healthcare analytics project on a **real, public, de-identified hospital dataset**: raw records → cleaning → analysis in Python and SQL → readmission risk model → interactive dashboard → recommendations for hospital managers.
 
-> **Data:** synthetic and fully de-identified (10,209 admissions, 7,200 patients, Jan 2023 – Dec 2024, costs in ₹). No real patient data is used. Findings are patterns in data, not medical advice.
+**Live dashboard:** https://claude.ai/artifact/KjeCQrC5LWXTV7aeaV7vnt
+**Final report:** https://claude.ai/artifact/XVc86HZk4Y9smCT65bgZqp
+**Presentation:** https://claude.ai/artifact/UFHaBqhQ7PWDD3jdfhwnLj
 
+## Data
 
----
+*Diabetes 130-US Hospitals for Years 1999–2008* — Clore, J., Cios, K., DeShazo, J., & Strack, B. (2014). UCI Machine Learning Repository. https://doi.org/10.24432/C5230J. Licence: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+101,766 inpatient encounters (71,518 patients) of patients with diabetes at 130 US hospitals, extracted from the Cerner Health Facts database. The raw files are included in `data/raw/` unchanged; the copy was verified against the official row, patient, column and readmission counts.
+
+Source paper: Strack, B. et al. (2014). *Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records.* BioMed Research International, 781670.
 
 ## Business questions
 
 | # | Question |
 |---|---|
-| Q1 | How is the hospital doing at a glance? |
-| Q2 | Who is admitted, and when? |
-| Q3 | Which patient groups and conditions stay longer? |
-| Q4 | Which patients are more likely to be readmitted within 30 days? |
-| Q5 | Which departments, conditions and admission types cost the most? |
+| Q1 | How is the hospital network doing at a glance? |
+| Q2 | Who is admitted, and how? |
+| Q3 | Which patients and conditions stay longer? |
+| Q4 | Who is readmitted within 30 days? |
+| Q5 | Where do hospital resources (bed-days) go? |
 
 ## Key results
 
 | Metric | Value |
 |---|---|
-| Admissions / patients | 10,209 / 7,200 |
-| Average length of stay | 6.37 days (median 5) |
-| 30-day readmission rate | 13.4% (1,264 of 9,412 eligible stays) |
-| Average cost per stay | ₹1,08,971 |
-| Total cost | ₹109.58 crore |
+| Encounters / patients (after cleaning) | 101,763 / 71,515 |
+| Average length of stay | 4.40 days (median 4) |
+| 30-day readmission rate | 11.39% (11,314 of 99,340 eligible encounters) |
+| HbA1c measured | 16.7% of encounters |
+| Total bed-days | 447,352 |
 
-- **Age drives length of stay:** 80+ patients stay 10.9 days vs 3.9 for ages 18–34.
-- **Chronic conditions drive readmissions:** heart failure 26.8%, COPD 26.2%, kidney disease 24.1% — about 2× the hospital rate.
-- **History predicts return:** patients with 3+ admissions in the prior year are readmitted at 38.5% vs 10.4% for first-timers.
-- **Leaving against medical advice** nearly triples readmission odds (adjusted OR 2.89).
-- **Cost concentration:** Cardiology + Orthopedics = 48% of spend; the top 10% of stays = 26.6%.
-- **Risk model:** logistic regression, hold-out AUC 0.75; the top-risk decile is readmitted at 41.8% and holds 31% of all readmissions.
+- **Prior inpatient use is the strongest signal:** readmission rises from 8.6% (no inpatient stay in the prior year) to 26.4% (3 or more) — 3× higher.
+- **Discharge destination matters:** 15.9% for nursing/rehab facilities and 19.1% for other facilities vs 9.3% for home (adjusted odds ratios 1.67 and 2.24).
+- **Diagnosis matters less than expected:** rates range only from 9.5% (musculoskeletal) to 13.1% (diabetes).
+- **HbA1c is rarely measured:** 16.7% of encounters; tested patients were readmitted less often (9.9% vs 11.7%, adjusted OR 0.87), consistent with Strack et al.
+- **Resource use:** circulatory conditions take 28.8% of all bed-days; readmission stays take 12.1%.
+- **Risk model:** gradient boosting with a **patient-grouped** train/test split (no patient in both sets), hold-out AUC 0.663 (logistic regression 0.659). The top-risk 10% are readmitted at 26.0% — 2.3× the base rate — and hold 22.7% of all readmissions.
 
-![Readmission rate by diagnosis](reports/figures/q4_readmit_by_diagnosis.png)
+![Readmission drivers](reports/figures/q4_readmit_drivers.png)
 
 ## Project structure
 
 ```
-hospital-analytics/
+hospital-data-analysis/
 ├── data/
-│   ├── raw/hospital_admissions_raw.csv        # messy generated data (10,362 rows)
-│   ├── processed/hospital_admissions_clean.csv # clean analysis table (10,209 rows)
-│   ├── processed/cleaning_log.csv              # every cleaning step + row counts
-│   ├── processed/summary_*.csv, kpis.json      # outputs used by the report/dashboard
-│   └── DATA_DICTIONARY.md                      # fields + shared metric definitions
+│   ├── raw/diabetic_data.csv, IDS_mapping.csv     # original UCI files (CC BY 4.0)
+│   ├── processed/hospital_encounters_clean.csv    # clean analysis table
+│   ├── processed/cleaning_log.csv                 # every cleaning step + row counts
+│   ├── processed/summary_*.csv, kpis.json, risk_model.json
+│   └── DATA_DICTIONARY.md                         # fields + shared metric definitions
 ├── scripts/
-│   ├── 01_generate_data.py   # synthetic data with realistic patterns + injected errors
-│   ├── 02_clean_data.py      # cleaning + feature engineering
-│   ├── 03_run_sql.py         # loads SQLite, runs all SQL queries
+│   ├── 01_clean_data.py      # cleaning, ID mapping, ICD-9 grouping, readmission flag
+│   ├── 02_run_sql.py         # loads SQLite and runs all SQL queries
 │   └── build_notebook.py     # rebuilds the notebook from source
-├── notebooks/hospital_analysis.ipynb   # full analysis with charts (executed)
+├── notebooks/hospital_analysis.ipynb   # full analysis, charts and models (executed)
 ├── sql/analysis_queries.sql            # 10 queries: CTEs, window functions, ranking
-├── powerbi/
-│   ├── DAX_measures.dax      # 25 measures + Calendar table
-│   └── BUILD_GUIDE.md        # page-by-page Power BI build + validation targets
-├── dashboard/                # source of the live web dashboard (HTML + D3)
-├── reports/figures/          # PNG charts from the notebook
+├── powerbi/DAX_measures.dax, BUILD_GUIDE.md   # 20 DAX measures + build guide
+├── dashboard/                          # source of the live web dashboard (HTML + D3)
+├── reports/figures/                    # charts from the notebook
 └── requirements.txt
 ```
 
@@ -67,9 +71,8 @@ hospital-analytics/
 
 ```bash
 pip install -r requirements.txt
-python scripts/01_generate_data.py
-python scripts/02_clean_data.py
-python scripts/03_run_sql.py
+python scripts/01_clean_data.py
+python scripts/02_run_sql.py
 jupyter notebook notebooks/hospital_analysis.ipynb
 ```
 
@@ -77,17 +80,15 @@ jupyter notebook notebooks/hospital_analysis.ipynb
 
 | Issue | Rows | Fix |
 |---|---|---|
-| Duplicate records | 153 | Removed |
-| Inconsistent gender labels | 1,033 | Standardised |
-| Inconsistent department names | 351 | Mapped to 9 standard names |
-| Mixed date formats | 510 | Converted to ISO |
-| Discharge before admission | 15 | Swapped back |
-| Missing / impossible ages | 216 | Imputed and flagged |
-| Costs stored as text | 408 | Parsed |
-| Mis-keyed cost outliers | 8 | Corrected and flagged |
-| Missing cost | 153 | Kept missing; excluded from cost metrics |
+| "?" used as missing marker | 192,849 cells | Converted to missing values |
+| Invalid gender | 3 | Removed |
+| Weight / max glucose serum | 96.9% / 94.7% missing | Columns dropped |
+| Admitting specialty | 49.1% missing | Grouped as "Not recorded" |
+| Admission, source, discharge codes | all | Mapped to labels |
+| 716 distinct ICD-9 codes | all | Grouped into 9 categories |
+| Repeat patients | 30,248 encounters | Model split grouped by patient |
 
-**Validation:** KPIs match exactly across the notebook, SQL and the dashboard; the readmission flag was derived independently in pandas and SQL (1,264 = 1,264).
+**Validation:** raw file matches UCI's published counts; KPIs are identical across the notebook, SQL and the dashboard.
 
 ## Tools
 
@@ -95,15 +96,4 @@ Python (pandas, NumPy, matplotlib, seaborn, statsmodels, scikit-learn) · SQL (S
 
 ## Limitations
 
-Synthetic data; associations not causes; readmissions only counted at this hospital; 2024's higher volume partly reflects repeat visits accumulating, not real growth.
-
----
-
-## Resume bullets (pick 2–4)
-
-- Built an end-to-end hospital analytics project in **Python and SQL** on 10,000+ de-identified admissions, analysing length of stay, 30-day readmissions and cost across 9 departments and 16 diagnoses.
-- Designed a reproducible **pandas cleaning pipeline** that resolved 10 data-quality issues (duplicates, mixed date formats, inconsistent labels, invalid ages, text-formatted costs) with a full audit log and data dictionary.
-- Identified that 3 chronic conditions are readmitted at ~2× the hospital average and that patients with 3+ prior admissions return at 38.5% vs 10.4%, leading to a targeted discharge follow-up recommendation.
-- Built a **logistic-regression readmission risk model** (hold-out AUC 0.75) whose top-risk decile captured 31% of readmissions at 3× the base rate.
-- Developed an **interactive dashboard** (KPI cards, filters, 6 charts) and a **Power BI build kit with 25 DAX measures**; validated that every KPI matched the SQL and Python results exactly.
-- Wrote **10 SQL queries** using CTEs and window functions (LEAD, RANK) to compute KPIs and independently re-derive the readmission flag.
+Observational data from 1999–2008 (ICD-9 era); readmissions to hospitals outside the database are probably missed; no cost, dates, severity or social factors; diabetic patients only. Findings are associations, not causes.

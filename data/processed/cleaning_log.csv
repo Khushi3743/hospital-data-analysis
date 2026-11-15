@@ -1,19 +1,16 @@
 step,rows_affected,detail
-Load raw file,10362,all columns read as text first
-Remove exact duplicate rows,153,double-loaded records
-Check duplicate admission_id,0,should be 0 after removing exact duplicates
-Standardise gender,1033,M/male/MALE/F/female -> Male/Female
-Standardise department,351,"case, spaces and 'Gen.' abbreviation fixed"
-Fill missing insurance_type,306,"labelled 'Unknown' (kept, not dropped)"
-Fill missing admission_source,204,"labelled 'Unknown' (kept, not dropped)"
-Fill missing discharge_disposition,102,"labelled 'Unknown' (kept, not dropped)"
-Parse mixed date formats,510,DD/MM/YYYY rows converted to ISO
-Fix discharge before admission,15,dates were swapped at entry; swapped back
-Invalid ages set to missing,12,"age outside 0-110 (typos like 150, -1)"
-Impute missing age,216,"114 from patient's other stays, 102 from diagnosis median; flagged age_imputed"
-Convert text costs to numbers,408,"'Rs 1,23,000' style values parsed"
-Correct mis-keyed cost outliers,8,>6x diagnosis median cost/day; extra zero removed (/10); flagged cost_corrected
-Missing total_cost left as missing,153,not imputed; excluded from cost metrics only
-Readmission eligible stays,9412,excludes deaths and discharges in final 30 days of data
-High-cost threshold (90th percentile),1006,"INR 235,950"
-Write clean file,10209,data/processed/hospital_admissions_clean.csv
+Load raw file,101766,"101,766 encounters expected (UCI)"
+'?' used as missing marker,192849,"cells; top columns: weight 98,569, medical_specialty 49,949, payer_code 40,256, race 2,273"
+Duplicate encounter_id,0,should be 0
+Remove invalid gender,3,gender recorded as Unknown/Invalid
+Drop weight,98566,96.9% missing - too sparse to use
+Drop max_glu_serum,96417,94.7% missing - too sparse to use
+Missing race,2271,2.2% - labelled 'Unknown'
+Missing payer_code,40255,39.6% - labelled 'Unknown'
+Missing medical_specialty,49947,49.1% - grouped as 'Not recorded'
+Map coded IDs to labels,101763,"admission type, admission source, discharge disposition via IDS_mapping.csv"
+Group primary ICD-9 diagnosis,101763,into 9 categories (Strack et al. 2014 scheme)
+Readmission-eligible encounters,99340,excludes deaths and discharges to hospice
+Readmitted within 30 days,11314,label readmitted == '<30' among eligible
+Encounter is a repeat visit,30248,patients with more than one encounter - model split is grouped by patient
+Write clean file,101763,data/processed/hospital_encounters_clean.csv
